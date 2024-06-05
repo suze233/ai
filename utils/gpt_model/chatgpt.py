@@ -27,7 +27,6 @@ class Chatgpt:
         self.data_openai = data_openai
         self.data_chatgpt = data_chatgpt
 
-
     # chatgpt相关
     def chat(self, msg, sessionid):
         """
@@ -74,7 +73,6 @@ class Chatgpt:
             logging.error(traceback.format_exc())
             return None
 
-
     def get_chat_session(self, sessionid):
         """
         获取指定 ID 的会话，如果不存在则创建一个新的会话
@@ -88,7 +86,6 @@ class Chatgpt:
             config['msg'].append({"role": "system", "content": "current time is:" + self.common.get_bj_time()})
             self.sessions[sessionid] = config
         return self.sessions[sessionid]
-
 
     def chat_with_gpt(self, messages):
         """
@@ -138,7 +135,8 @@ class Chatgpt:
                 resp = resp.choices[0].message.content
         # 处理 OpenAIError 异常
         except openai.OpenAIError as e:
-            if str(e).__contains__("Rate limit reached for default-gpt-3.5-turbo") and self.current_key_index <= max_length:
+            if str(e).__contains__(
+                    "Rate limit reached for default-gpt-3.5-turbo") and self.current_key_index <= max_length:
                 self.current_key_index = self.current_key_index + 1
                 logging.warning("速率限制，尝试切换key")
                 msg = self.chat_with_gpt(messages)
@@ -160,7 +158,6 @@ class Chatgpt:
                 return None
 
         return resp
-
 
     # 调用gpt接口，获取返回内容
     def get_gpt_resp(self, username, prompt):

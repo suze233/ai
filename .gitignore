@@ -222,7 +222,7 @@ backup
 
 Miniconda3/
 
-models/mo*
+models
 
 out/sd/*
 

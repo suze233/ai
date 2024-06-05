@@ -8,12 +8,12 @@
   "api_port": 8082,
   "platform": "talk",
   "room_display_id": "278333",
-  "chat_type": "reread",
+  "chat_type": "chatgpt",
   "need_lang": "none",
   "before_prompt": "请简要回复:",
-  "after_prompt": "",
+  "after_prompt": "喵",
   "comment_template": {
-    "enable": false,
+    "enable": true,
     "copywriting": "{username}说：{comment}"
   },
   "comment_log_type": "回答",
@@ -77,8 +77,8 @@
     ]
   },
   "read_comment": {
-    "enable": true,
-    "read_username_enable": true,
+    "enable": false,
+    "read_username_enable": false,
     "username_max_len": 10,
     "voice_change": false,
     "read_username_copywriting": [
@@ -92,7 +92,9 @@
     "before_filter_str": [
       "#"
     ],
-    "after_filter_str": [],
+    "after_filter_str": [
+      "#"
+    ],
     "badwords": {
       "enable": true,
       "discard": false,
@@ -197,18 +199,18 @@
     "lowest_price": 0.1
   },
   "live2d": {
-    "enable": false,
+    "enable": true,
     "port": 12345,
     "name": "Hiyori"
   },
   "openai": {
-    "api": "https://api.openai.com/v1",
+    "api": "https://api.fastgpt.in/api/v1",
     "api_key": [
-      "替换为你的api-key"
+      "fastgpt-mCXf0aTWwQCY6tQT4qkE4s2MMhwzxVnvtbkTB9SZPNZ6Vg0SzNBt"
     ]
   },
   "chatgpt": {
-    "model": "gpt-3.5-turbo-0613",
+    "model": null,
     "temperature": 0.9,
     "max_tokens": 4096,
     "top_p": 1.0,
@@ -217,7 +219,7 @@
     "preset": "请扮演一个AI虚拟主播。不要回答任何敏感问题！不要强调你是主播，只需要回答问题！"
   },
   "gpt4free": {
-    "provider": "",
+    "provider": null,
     "api_key": "",
     "model": "gpt-3.5-turbo",
     "max_tokens": 2048,
@@ -256,7 +258,7 @@
     "max_new_tokens": 250,
     "history_enable": true,
     "history_max_len": 20,
-    "preset": "现在你正在blibili进行直播。"
+    "preset": "请扮演一个AI虚拟主播。不要回答任何敏感问题！不要强调你是主播，只需要回答问题！"
   },
   "sparkdesk": {
     "type": "api",
@@ -325,7 +327,7 @@
     "knowledge_base": {
       "knowledge_base_name": "ikaros",
       "top_k": 3,
-      "score_threshold": 1,
+      "score_threshold": 1.0,
       "stream": false,
       "model_name": "chatglm3-6b-int4",
       "temperature": 0.7,
@@ -439,7 +441,9 @@
     "app_secret": "",
     "api_ip_port": "http://127.0.0.1:8777",
     "user_id": "zzp",
-    "kb_ids": ["KB938fb10c8a924530abf1754ea620b7cd"],
+    "kb_ids": [
+      "KB938fb10c8a924530abf1754ea620b7cd"
+    ],
     "history_enable": true,
     "history_max_len": 300
   },
@@ -663,7 +667,7 @@
     "api_ip_port": "http://127.0.0.1:9988",
     "voice": "cn-nan.wav",
     "language": "zh-cn",
-    "speed": 1
+    "speed": 1.0
   },
   "azure_tts": {
     "subscription_key": "",
@@ -705,7 +709,9 @@
     "enable": false,
     "similarity": 0.5,
     "start_cmd": [
-      "点歌 ",
+      "唱首",
+      "唱个",
+      "点歌",
       "唱首",
       "唱个"
     ],
@@ -758,23 +764,23 @@
       {
         "file_path": "data/copywriting/",
         "audio_path": "out/copywriting/",
+        "continuous_play_num": 2,
+        "max_play_time": 10.0,
         "play_list": [
           "test.wav",
           "伊卡日语介绍.wav",
           "吐槽.wav"
-        ],
-        "continuous_play_num": 2,
-        "max_play_time": 10.0
+        ]
       },
       {
         "file_path": "data/copywriting2/",
         "audio_path": "out/copywriting2/",
+        "continuous_play_num": 2,
+        "max_play_time": 3.0,
         "play_list": [
           "test.wav",
           "test2.wav"
-        ],
-        "continuous_play_num": 2,
-        "max_play_time": 3.0
+        ]
       }
     ],
     "audio_interval": 5.0,
@@ -786,17 +792,17 @@
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36 Edg/113.0.1774.42"
   },
   "talk": {
-    "key_listener_enable": false,
+    "key_listener_enable": true,
     "device_index": "1",
     "no_recording_during_playback": true,
-    "no_recording_during_playback_sleep_interval": 1,
+    "no_recording_during_playback_sleep_interval": 10.0,
     "username": "主人",
     "type": "google",
-    "continuous_talk": false,
+    "continuous_talk": true,
     "trigger_key": "Q",
     "stop_trigger_key": "S",
-    "volume_threshold": 800.0,
-    "silence_threshold": 15.0,
+    "volume_threshold": 1000.0,
+    "silence_threshold": 100.0,
     "CHANNELS": 1,
     "RATE": 16000,
     "show_chat_log": true,
@@ -810,7 +816,7 @@
     },
     "faster_whisper": {
       "model_size": "large-v3",
-      "device": "cuda",
+      "device": "cpu",
       "compute_type": "float16",
       "download_root": "./models",
       "beam_size": 5
@@ -866,7 +872,9 @@
     "enable": false,
     "idle_time_min": 60,
     "idle_time_max": 120,
-    "trigger_type": ["comment"],
+    "trigger_type": [
+      "comment"
+    ],
     "copywriting": {
       "enable": false,
       "random": true,
@@ -1266,7 +1274,8 @@
         "similarity": "1",
         "copywriting": []
       }
-    ]
+    ],
+    "copywriting_single_sentence_trigger_once": null
   },
   "custom_cmd": {
     "enable": false,
@@ -1453,13 +1462,17 @@
       "enable": false,
       "name": "captions_printer",
       "executable": "E://GitHub_pro//captions_printer//pkg//captions_printer-v4.1//Miniconda3//python.exe",
-      "parameters": ["E://GitHub_pro//captions_printer//pkg//captions_printer-v4.1//app.py"]
+      "parameters": [
+        "E://GitHub_pro//captions_printer//pkg//captions_printer-v4.1//app.py"
+      ]
     },
     {
       "enable": false,
       "name": "audio_player",
       "executable": "E://GitHub_pro//audio_player//pkg//audio_player_v2-20240320//Miniconda3//python.exe",
-      "parameters": ["E://GitHub_pro//audio_player//pkg//audio_player_v2-20240320//app.py"]
+      "parameters": [
+        "E://GitHub_pro//audio_player//pkg//audio_player_v2-20240320//app.py"
+      ]
     }
   ],
   "assistant_anchor": {

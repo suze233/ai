@@ -56,12 +56,11 @@ def start_server():
     global config, common, my_handle, last_username_list, config_path, last_liveroom_data
     global do_listen_and_comment_thread, stop_do_listen_and_comment_thread_event, faster_whisper_model
 
-
     # 按键监听相关
     do_listen_and_comment_thread = None
     stop_do_listen_and_comment_thread_event = threading.Event()
     # 冷却时间 0.5 秒
-    cooldown = 0.5 
+    cooldown = 0.5
     last_pressed = 0
 
     # 获取 httpx 库的日志记录器
@@ -71,13 +70,13 @@ def start_server():
 
     # 最新的直播间数据
     last_liveroom_data = {
-        'OnlineUserCount': 0, 
-        'TotalUserCount': 0, 
-        'TotalUserCountStr': '0', 
-        'OnlineUserCountStr': '0', 
-        'MsgId': 0, 
-        'User': None, 
-        'Content': '当前直播间人数 0，累计直播间人数 0', 
+        'OnlineUserCount': 0,
+        'TotalUserCount': 0,
+        'TotalUserCountStr': '0',
+        'OnlineUserCountStr': '0',
+        'MsgId': 0,
+        'User': None,
+        'Content': '当前直播间人数 0，累计直播间人数 0',
         'RoomId': 0
     }
     # 最新入场的用户名列表
@@ -95,7 +94,7 @@ def start_server():
             CORS(app)  # 允许跨域请求
 
             logging.info("HTTP API线程已启动！")
-            
+
             @app.route('/send', methods=['POST'])
             def send():
                 global my_handle, config
@@ -123,7 +122,7 @@ def start_server():
 
                 except Exception as e:
                     return jsonify({"code": -1, "message": f"发送数据失败！{e}"})
-                
+
             @app.route('/llm', methods=['POST'])
             def llm():
                 global my_handle, config
@@ -145,13 +144,12 @@ def start_server():
 
                 except Exception as e:
                     return jsonify({"code": -1, "message": f"发送数据失败！{e}"})
-                
+
             app.run(host="0.0.0.0", port=config.get("api_port"), debug=False)
-        
+
         # HTTP API线程并启动
         schedule_thread = threading.Thread(target=http_api_thread)
         schedule_thread.start()
-
 
     # 添加用户名到最新的用户名列表
     def add_username_to_last_username_list(data):
@@ -162,14 +160,14 @@ def start_server():
 
         # 添加数据到 最新入场的用户名列表
         last_username_list.append(data)
-        
+
         # 保留最新的3个数据
         last_username_list = last_username_list[-3:]
-
 
     """
     按键监听板块
     """
+
     # 录音功能(录音时间过短进入openai的语音转文字会报错，请一定注意)
     def record_audio():
         pressdown_num = 0
@@ -205,12 +203,11 @@ def start_server():
         wf.setframerate(RATE)
         wf.writeframes(b''.join(frames))
         wf.close()
-        if pressdown_num >= 5:         # 粗糙的处理手段
+        if pressdown_num >= 5:  # 粗糙的处理手段
             return 1
         else:
             print("杂鱼杂鱼，好短好短(录音时间过短,按右shift重新录制)")
             return 0
-
 
     # THRESHOLD 设置音量阈值,默认值800.0,根据实际情况调整  silence_threshold 设置沉默阈值，根据实际情况调整
     def audio_listen(volume_threshold=800.0, silence_threshold=15):
@@ -235,7 +232,7 @@ def start_server():
 
         is_speaking = False  # 是否在说话
         silent_count = 0  # 沉默计数
-        speaking_flag = False   #录入标志位 不重要
+        speaking_flag = False  # 录入标志位 不重要
 
         while True:
             # 播放中不录音
@@ -244,7 +241,7 @@ def start_server():
                 if my_handle.is_audio_queue_empty() != 15 or my_handle.is_handle_empty() == 1:
                     time.sleep(float(config.get("talk", "no_recording_during_playback_sleep_interval")))
                     continue
-                
+
             # 读取音频数据
             data = stream.read(CHUNK)
             audio_data = np.frombuffer(data, dtype=np.short)
@@ -274,7 +271,6 @@ def start_server():
             wf.setframerate(RATE)
             wf.writeframes(b''.join(frames))'''
         return frames
-    
 
     # 执行录音、识别&提交
     def do_listen_and_comment(status=True):
@@ -285,20 +281,20 @@ def start_server():
         # 是否启用按键监听，不启用的话就不用执行了
         if False == config.get("talk", "key_listener_enable"):
             return
-        
+
         # 针对faster_whisper情况，模型加载一次共用，减少开销
-        if "faster_whisper" == config.get("talk", "type") :
+        if "faster_whisper" == config.get("talk", "type"):
             from faster_whisper import WhisperModel
-            
+
             if faster_whisper_model is None:
                 logging.info("faster_whisper 模型加载中，请稍后...")
                 # Run on GPU with FP16
-                faster_whisper_model = WhisperModel(model_size_or_path=config.get("talk", "faster_whisper", "model_size"), \
-                                    device=config.get("talk", "faster_whisper", "device"), \
-                                    compute_type=config.get("talk", "faster_whisper", "compute_type"), \
-                                    download_root=config.get("talk", "faster_whisper", "download_root"))
+                faster_whisper_model = WhisperModel(
+                    model_size_or_path=config.get("talk", "faster_whisper", "model_size"), \
+                    device=config.get("talk", "faster_whisper", "device"), \
+                    compute_type=config.get("talk", "faster_whisper", "compute_type"), \
+                    download_root=config.get("talk", "faster_whisper", "download_root"))
                 logging.info("faster_whisper 模型加载完毕，可以开始说话了喵~")
-
 
         while True:
             try:
@@ -308,7 +304,7 @@ def start_server():
                     break
 
                 config = Config(config_path)
-            
+
                 # 根据接入的语音识别类型执行
                 if "baidu" == config.get("talk", "type"):
                     # 设置音频参数
@@ -325,7 +321,8 @@ def start_server():
                     WAVE_OUTPUT_FILENAME = common.get_new_audio_path(audio_out_path, file_name)
                     # WAVE_OUTPUT_FILENAME = './out/baidu_' + common.get_bj_time(4) + '.wav'
 
-                    frames = audio_listen(config.get("talk", "volume_threshold"), config.get("talk", "silence_threshold"))
+                    frames = audio_listen(config.get("talk", "volume_threshold"),
+                                          config.get("talk", "silence_threshold"))
 
                     # 将音频保存为WAV文件
                     with wave.open(WAVE_OUTPUT_FILENAME, 'wb') as wf:
@@ -339,7 +336,9 @@ def start_server():
                         audio = fp.read()
 
                     # 初始化 AipSpeech 对象
-                    baidu_client = AipSpeech(config.get("talk", "baidu", "app_id"), config.get("talk", "baidu", "api_key"), config.get("talk", "baidu", "secret_key"))
+                    baidu_client = AipSpeech(config.get("talk", "baidu", "app_id"),
+                                             config.get("talk", "baidu", "api_key"),
+                                             config.get("talk", "baidu", "secret_key"))
 
                     # 识别音频文件
                     res = baidu_client.asr(audio, 'wav', 16000, {
@@ -360,7 +359,7 @@ def start_server():
 
                         my_handle.process_data(data, "talk")
                     else:
-                        logging.error(f"百度接口报错：{res}")  
+                        logging.error(f"百度接口报错：{res}")
                 elif "google" == config.get("talk", "type"):
                     # 创建Recognizer对象
                     r = sr.Recognizer()
@@ -406,7 +405,8 @@ def start_server():
                     WAVE_OUTPUT_FILENAME = common.get_new_audio_path(audio_out_path, file_name)
                     # WAVE_OUTPUT_FILENAME = './out/faster_whisper_' + common.get_bj_time(4) + '.wav'
 
-                    frames = audio_listen(config.get("talk", "volume_threshold"), config.get("talk", "silence_threshold"))
+                    frames = audio_listen(config.get("talk", "volume_threshold"),
+                                          config.get("talk", "silence_threshold"))
 
                     # 将音频保存为WAV文件
                     with wave.open(WAVE_OUTPUT_FILENAME, 'wb') as wf:
@@ -417,7 +417,9 @@ def start_server():
 
                     logging.debug("faster_whisper模型加载中...")
 
-                    segments, info = faster_whisper_model.transcribe(WAVE_OUTPUT_FILENAME, beam_size=config.get("talk", "faster_whisper", "beam_size"))
+                    segments, info = faster_whisper_model.transcribe(WAVE_OUTPUT_FILENAME,
+                                                                     beam_size=config.get("talk", "faster_whisper",
+                                                                                          "beam_size"))
 
                     logging.debug("识别语言为：'%s'，概率：%f" % (info.language, info.language_probability))
 
@@ -425,7 +427,7 @@ def start_server():
                     for segment in segments:
                         logging.info("[%.2fs -> %.2fs] %s" % (segment.start, segment.end, segment.text))
                         content += segment.text + "。"
-                    
+
                     if content == "":
                         return
 
@@ -446,7 +448,6 @@ def start_server():
             except Exception as e:
                 logging.error(traceback.format_exc())
 
-
     def on_key_press(event):
         global do_listen_and_comment_thread, stop_do_listen_and_comment_thread_event
 
@@ -455,15 +456,14 @@ def start_server():
             return
 
         # if event.name in ['z', 'Z', 'c', 'C'] and keyboard.is_pressed('ctrl'):
-            # print("退出程序")
+        # print("退出程序")
 
-            # os._exit(0)
-        
+        # os._exit(0)
+
         # 按键CD
         current_time = time.time()
         if current_time - last_pressed < cooldown:
             return
-        
 
         """
         触发按键部分的判断
@@ -478,7 +478,7 @@ def start_server():
         # stop_trigger_key是字母, 整个小写
         if stop_trigger_key.isalpha():
             stop_trigger_key_lower = stop_trigger_key.lower()
-        
+
         if trigger_key_lower:
             if event.name == trigger_key or event.name == trigger_key_lower:
                 logging.info(f'检测到单击键盘 {event.name}，即将开始录音~')
@@ -508,7 +508,6 @@ def start_server():
             do_listen_and_comment_thread = threading.Thread(target=do_listen_and_comment, args=(False,))
             do_listen_and_comment_thread.start()
 
-
     # 按键监听
     def key_listener():
         # 注册按键按下事件的回调函数
@@ -520,7 +519,6 @@ def start_server():
         except KeyboardInterrupt:
             os._exit(0)
 
-
     # 从配置文件中读取触发键的字符串配置
     trigger_key = config.get("talk", "trigger_key")
     stop_trigger_key = config.get("talk", "stop_trigger_key")
@@ -531,7 +529,6 @@ def start_server():
     # 创建并启动按键监听线程
     thread = threading.Thread(target=key_listener)
     thread.start()
-
 
     # 定时任务
     def schedule_task(index):
@@ -554,7 +551,6 @@ def start_server():
             time = f"傍晚{hour - 12}点{min}分"
         elif 20 <= hour and hour < 24:
             time = f"晚上{hour - 12}点{min}分"
-
 
         # 根据对应索引从列表中随机获取一个值
         random_copy = random.choice(config.get("schedule")[index]["copy"])
@@ -590,7 +586,6 @@ def start_server():
 
         # schedule.clear(index)
 
-
     # 启动定时任务
     def run_schedule():
         global config
@@ -610,7 +605,8 @@ def start_server():
 
                         schedule_task(index)
 
-                        schedule.every(next_time).seconds.do(schedule_random_task, index, min_seconds, max_seconds).tag(index)
+                        schedule.every(next_time).seconds.do(schedule_random_task, index, min_seconds, max_seconds).tag(
+                            index)
 
                     schedule_random_task(index, min_seconds, max_seconds)
         except Exception as e:
@@ -620,12 +616,10 @@ def start_server():
             schedule.run_pending()
             # time.sleep(1)  # 控制每次循环的间隔时间，避免过多占用 CPU 资源
 
-
     if any(item['enable'] for item in config.get("schedule")):
         # 创建定时任务子线程并启动
         schedule_thread = threading.Thread(target=run_schedule)
         schedule_thread.start()
-
 
     # 启动动态文案
     async def run_trends_copywriting():
@@ -634,7 +628,7 @@ def start_server():
         try:
             if False == config.get("trends_copywriting", "enable"):
                 return
-            
+
             logging.info(f"动态文案任务线程运行中...")
 
             while True:
@@ -665,7 +659,8 @@ def start_server():
                             }
 
                             # 调用函数进行LLM处理，以及生成回复内容，进行音频合成，需要好好考虑考虑实现
-                            data_json["content"] = my_handle.llm_handle(config.get("trends_copywriting", "llm_type"), data_json)
+                            data_json["content"] = my_handle.llm_handle(config.get("trends_copywriting", "llm_type"),
+                                                                        data_json)
                         else:
                             copywriting_file_content = common.brackets_text_randomize(copywriting_file_content)
 
@@ -674,7 +669,8 @@ def start_server():
                                 "content": copywriting_file_content
                             }
 
-                        logging.debug(f'copywriting_file_content={copywriting_file_content},content={data_json["content"]}')
+                        logging.debug(
+                            f'copywriting_file_content={copywriting_file_content},content={data_json["content"]}')
 
                         # 空数据判断
                         if data_json["content"] != None and data_json["content"] != "":
@@ -696,7 +692,7 @@ def start_server():
         try:
             if False == config.get("idle_time_task", "enable"):
                 return
-            
+
             logging.info(f"闲时任务线程运行中...")
 
             # 记录上一次触发的任务类型
@@ -708,7 +704,7 @@ def start_server():
             overflow_time_min = int(config.get("idle_time_task", "idle_time_min"))
             overflow_time_max = int(config.get("idle_time_task", "idle_time_max"))
             overflow_time = random.randint(overflow_time_min, overflow_time_max)
-            
+
             logging.info(f"下一个闲时任务将在{overflow_time}秒后执行")
 
             def load_data_list(type):
@@ -780,7 +776,7 @@ def start_server():
                                 time = f"傍晚{hour - 12}点{min}分"
                             elif 20 <= hour and hour < 24:
                                 time = f"晚上{hour - 12}点{min}分"
-                                
+
                             # 动态变量替换
                             # 假设有多个未知变量，用户可以在此处定义动态变量
                             variables = {
@@ -795,8 +791,9 @@ def start_server():
 
                             # 使用字典进行字符串替换
                             if any(var in copywriting_copy for var in variables):
-                                copywriting_copy = copywriting_copy.format(**{var: value for var, value in variables.items() if var in copywriting_copy})
-                            
+                                copywriting_copy = copywriting_copy.format(
+                                    **{var: value for var, value in variables.items() if var in copywriting_copy})
+
                             # [1|2]括号语法随机获取一个值，返回取值完成后的字符串
                             copywriting_copy = common.brackets_text_randomize(copywriting_copy)
 
@@ -859,7 +856,7 @@ def start_server():
                                 time = f"傍晚{hour - 12}点{min}分"
                             elif 20 <= hour and hour < 24:
                                 time = f"晚上{hour - 12}点{min}分"
-                                
+
                             # 动态变量替换
                             # 假设有多个未知变量，用户可以在此处定义动态变量
                             variables = {
@@ -874,8 +871,9 @@ def start_server():
 
                             # 使用字典进行字符串替换
                             if any(var in comment_copy for var in variables):
-                                comment_copy = comment_copy.format(**{var: value for var, value in variables.items() if var in comment_copy})
-                            
+                                comment_copy = comment_copy.format(
+                                    **{var: value for var, value in variables.items() if var in comment_copy})
+
                             # [1|2]括号语法随机获取一个值，返回取值完成后的字符串
                             comment_copy = common.brackets_text_randomize(comment_copy)
 
@@ -970,9 +968,8 @@ def start_server():
             global_idle_time = 0
 
             return True
-        
-        return False
 
+        return False
 
     # 图像识别 定时任务
     def image_recognition_schedule_task(type: str):
@@ -991,7 +988,6 @@ def start_server():
 
         my_handle.process_data(data, "image_recognition_schedule")
 
-
     # 启动图像识别 定时任务
     def run_image_recognition_schedule(interval: int, type: str):
         global config
@@ -1005,17 +1001,19 @@ def start_server():
             schedule.run_pending()
             # time.sleep(1)  # 控制每次循环的间隔时间，避免过多占用 CPU 资源
 
-
     if config.get("image_recognition", "loop_screenshot_enable"):
         # 创建定时任务子线程并启动
-        image_recognition_schedule_thread = threading.Thread(target=lambda: run_image_recognition_schedule(config.get("image_recognition", "loop_screenshot_delay"), "窗口截图"))
+        image_recognition_schedule_thread = threading.Thread(
+            target=lambda: run_image_recognition_schedule(config.get("image_recognition", "loop_screenshot_delay"),
+                                                          "窗口截图"))
         image_recognition_schedule_thread.start()
 
     if config.get("image_recognition", "loop_cam_screenshot_enable"):
         # 创建定时任务子线程并启动
-        image_recognition_cam_schedule_thread = threading.Thread(target=lambda: run_image_recognition_schedule(config.get("image_recognition", "loop_cam_screenshot_delay"), "摄像头截图"))
+        image_recognition_cam_schedule_thread = threading.Thread(
+            target=lambda: run_image_recognition_schedule(config.get("image_recognition", "loop_cam_screenshot_delay"),
+                                                          "摄像头截图"))
         image_recognition_cam_schedule_thread.start()
-
 
     logging.info(f"当前平台：{platform}")
 
@@ -1039,10 +1037,10 @@ def start_server():
 
                 # 生成一个 Credential 对象
                 credential = Credential(
-                    sessdata=common.parse_cookie_data(bilibili_cookie, "SESSDATA"), 
-                    bili_jct=common.parse_cookie_data(bilibili_cookie, "bili_jct"), 
-                    buvid3=common.parse_cookie_data(bilibili_cookie, "buvid3"), 
-                    dedeuserid=common.parse_cookie_data(bilibili_cookie, "DedeUserID"), 
+                    sessdata=common.parse_cookie_data(bilibili_cookie, "SESSDATA"),
+                    bili_jct=common.parse_cookie_data(bilibili_cookie, "bili_jct"),
+                    buvid3=common.parse_cookie_data(bilibili_cookie, "buvid3"),
+                    dedeuserid=common.parse_cookie_data(bilibili_cookie, "DedeUserID"),
                     ac_time_value=bilibili_ac_time_value
                 )
             elif config.get("bilibili", "login_type") == "手机扫码":
@@ -1100,7 +1098,7 @@ def start_server():
 
             # 闲时计数清零
             idle_time_auto_clear("comment")
-        
+
             content = event["data"]["info"][1]  # 获取弹幕内容
             username = event["data"]["info"][2][1]  # 获取发送弹幕的用户昵称
 
@@ -1161,7 +1159,8 @@ def start_server():
             # 单个礼物金额
             discount_price = event["data"]["data"]["discount_price"]
 
-            logging.info(f"用户：{username} 赠送 {num} 个 {gift_name}，单价 {discount_price}电池，总计 {combo_total_coin}电池")
+            logging.info(
+                f"用户：{username} 赠送 {num} 个 {gift_name}，单价 {discount_price}电池，总计 {combo_total_coin}电池")
 
             data = {
                 "platform": platform,
@@ -1210,7 +1209,6 @@ def start_server():
             my_handle.process_data(data, "gift")
 
             my_handle.process_data(data, "comment")
-            
 
         @room.on('INTERACT_WORD')
         async def _(event):
@@ -1254,7 +1252,6 @@ def start_server():
         #     """
 
         #     print(event)
-
 
         try:
             # 启动 Bilibili 直播间连接
@@ -1305,7 +1302,6 @@ def start_server():
                 finally:
                     await session.close()
 
-
         def init_session():
             global session, SESSDATA
 
@@ -1317,7 +1313,6 @@ def start_server():
 
             session = aiohttp.ClientSession()
             session.cookie_jar.update_cookies(cookies)
-
 
         async def run_single_client():
             """
@@ -1384,16 +1379,15 @@ def start_server():
                     client.stop_and_close() for client in clients
                 ))
 
-
         class MyHandler(blivedm.BaseHandler):
             # 演示如何添加自定义回调
             _CMD_CALLBACK_DICT = blivedm.BaseHandler._CMD_CALLBACK_DICT.copy()
-            
+
             # 入场消息回调
             def __interact_word_callback(self, client: blivedm.BLiveClient, command: dict):
                 # logging.info(f"[{client.room_id}] INTERACT_WORD: self_type={type(self).__name__}, room_id={client.room_id},"
                 #     f" uname={command['data']['uname']}")
-                
+
                 global last_username_list
 
                 idle_time_auto_clear("entrance")
@@ -1545,12 +1539,11 @@ def start_server():
 
                 my_handle.process_data(data, "gift")
 
-
             def _on_open_live_buy_guard(self, client: blivedm.OpenLiveClient, message: open_models.GuardBuyMessage):
                 logging.info(f'[{client.room_id}] {message.user_info.uname} 购买 大航海等级={message.guard_level}')
 
             def _on_open_live_super_chat(
-                self, client: blivedm.OpenLiveClient, message: open_models.SuperChatMessage
+                    self, client: blivedm.OpenLiveClient, message: open_models.SuperChatMessage
             ):
                 idle_time_auto_clear("gift")
 
@@ -1579,14 +1572,12 @@ def start_server():
                 my_handle.process_data(data, "comment")
 
             def _on_open_live_super_chat_delete(
-                self, client: blivedm.OpenLiveClient, message: open_models.SuperChatDeleteMessage
+                    self, client: blivedm.OpenLiveClient, message: open_models.SuperChatDeleteMessage
             ):
                 logging.info(f'[直播间 {message.room_id}] 删除醒目留言 message_ids={message.message_ids}')
 
             def _on_open_live_like(self, client: blivedm.OpenLiveClient, message: open_models.LikeMessage):
                 logging.info(f'用户：{message.uname} 点了个赞')
-
-
 
         asyncio.run(main_func())
     elif platform == "douyu":
@@ -1610,7 +1601,7 @@ def start_server():
 
                         username = data_json["username"]
                         content = data_json["content"]
-                        
+
                         logging.info(f'[📧直播间弹幕消息] [{username}]：{content}')
 
                         data = {
@@ -1618,7 +1609,7 @@ def start_server():
                             "username": username,
                             "content": content
                         }
-                        
+
                         my_handle.process_data(data, "comment")
 
                         # 添加用户名到最新的用户名列表
@@ -1629,7 +1620,6 @@ def start_server():
                     logging.error("数据解析错误！")
                     my_handle.abnormal_alarm_handle("platform")
                     continue
-            
 
         async def ws_server():
             ws_url = "127.0.0.1"
@@ -1637,7 +1627,6 @@ def start_server():
             server = await websockets.serve(on_message, ws_url, ws_port)
             logging.info(f"WebSocket 服务器已在 {ws_url}:{ws_port} 启动")
             await server.wait_closed()
-
 
         asyncio.run(ws_server())
     elif platform == "dy":
@@ -1652,14 +1641,14 @@ def start_server():
             if "Type" in message_json:
                 type = message_json["Type"]
                 data_json = json.loads(message_json["Data"])
-                
+
                 if type == 1:
                     # 闲时计数清零
                     idle_time_auto_clear("comment")
 
                     username = data_json["User"]["Nickname"]
                     content = data_json["Content"]
-                    
+
                     logging.info(f'[📧直播间弹幕消息] [{username}]：{content}')
 
                     data = {
@@ -1667,7 +1656,7 @@ def start_server():
                         "username": username,
                         "content": content
                     }
-                    
+
                     my_handle.process_data(data, "comment")
 
                     pass
@@ -1676,7 +1665,7 @@ def start_server():
                     username = data_json["User"]["Nickname"]
                     count = data_json["Count"]
 
-                    logging.info(f'[👍直播间点赞消息] {username} 点了{count}赞')                
+                    logging.info(f'[👍直播间点赞消息] {username} 点了{count}赞')
 
                 elif type == 3:
                     idle_time_auto_clear("entrance")
@@ -1707,7 +1696,7 @@ def start_server():
                         "platform": platform,
                         "username": username
                     }
-                    
+
                     my_handle.process_data(data, "follow")
 
                     pass
@@ -1741,11 +1730,11 @@ def start_server():
                         logging.error(traceback.format_exc())
                         discount_price = 1
 
-
                     # 总金额
                     combo_total_coin = repeat_count * discount_price
 
-                    logging.info(f'[🎁直播间礼物消息] 用户：{username} 赠送 {num} 个 {gift_name}，单价 {discount_price}抖币，总计 {combo_total_coin}抖币')
+                    logging.info(
+                        f'[🎁直播间礼物消息] 用户：{username} 赠送 {num} 个 {gift_name}，单价 {discount_price}抖币，总计 {combo_total_coin}抖币')
 
                     data = {
                         "platform": platform,
@@ -1804,16 +1793,13 @@ def start_server():
         def on_error(ws, error):
             logging.error(f"Error:{error}")
 
-
         def on_close(ws):
             logging.debug("WebSocket connection closed")
 
         def on_open(ws):
             logging.debug("WebSocket connection established")
-            
 
-
-        try: 
+        try:
             # WebSocket连接URL
             ws_url = "ws://127.0.0.1:8888"
 
@@ -1823,17 +1809,18 @@ def start_server():
             websocket.enableTrace(False)
             # 创建WebSocket连接
             ws = websocket.WebSocketApp(ws_url,
-                on_message=on_message,
-                on_error=on_error,
-                on_close=on_close,
-                on_open=on_open)
+                                        on_message=on_message,
+                                        on_error=on_error,
+                                        on_close=on_close,
+                                        on_open=on_open)
 
             # 运行WebSocket连接
             ws.run_forever()
         except KeyboardInterrupt:
             logging.warning('程序被强行退出')
         finally:
-            logging.warning('关闭ws连接...请确认您是否启动了抖音弹幕监听程序，ws服务正常运行！\n监听程序启动成功后，请重新运行程序进行对接使用！')
+            logging.warning(
+                '关闭ws连接...请确认您是否启动了抖音弹幕监听程序，ws服务正常运行！\n监听程序启动成功后，请重新运行程序进行对接使用！')
             # os._exit(0)
 
         # 等待子线程结束
@@ -1859,7 +1846,7 @@ def start_server():
 
                         username = data_json["username"]
                         content = data_json["content"]
-                        
+
                         logging.info(f'[📧直播间弹幕消息] [{username}]：{content}')
 
                         data = {
@@ -1867,7 +1854,7 @@ def start_server():
                             "username": username,
                             "content": content
                         }
-                        
+
                         my_handle.process_data(data, "comment")
 
                         # 添加用户名到最新的用户名列表
@@ -1878,7 +1865,6 @@ def start_server():
                     logging.error("数据解析错误！")
                     my_handle.abnormal_alarm_handle("platform")
                     continue
-            
 
         async def ws_server():
             ws_url = "127.0.0.1"
@@ -1887,9 +1873,8 @@ def start_server():
             logging.info(f"WebSocket 服务器已在 {ws_url}:{ws_port} 启动")
             await server.wait_closed()
 
-
         asyncio.run(ws_server())
-    
+
     elif platform == "ks":
         from playwright.sync_api import sync_playwright, TimeoutError
         from google.protobuf.json_format import MessageToDict
@@ -1940,8 +1925,8 @@ def start_server():
             def main(self, lid, semaphore):
                 if not os.path.exists(self.path + "\\cookie"):
                     os.makedirs(self.path + "\\cookie")
-                
-                cookie_path=self.path + "\\cookie\\" + self.phone + ".json"
+
+                cookie_path = self.path + "\\cookie\\" + self.phone + ".json"
                 # if not os.path.exists(cookie_path):
                 #     with open(cookie_path, 'w') as file:
                 #         file.write('{"a":"a"}')
@@ -1958,13 +1943,14 @@ def start_server():
                         cookie_list = self.find_file("cookie", "json")
 
                         live_url = self.uri + lid
-                    
+
                         if not os.path.exists(cookie_path):
                             self.context = self.browser.new_context(storage_state=None, user_agent=self.ua)
                         else:
                             self.context = self.browser.new_context(storage_state=cookie_list[0], user_agent=self.ua)
                         self.page = self.context.new_page()
-                        self.page.add_init_script("Object.defineProperties(navigator, {webdriver:{get:()=>undefined}});")
+                        self.page.add_init_script(
+                            "Object.defineProperties(navigator, {webdriver:{get:()=>undefined}});")
                         self.page.goto("https://live.kuaishou.com/")
                         # self.page.goto(live_url)
                         element = self.page.get_attribute('.no-login', "style")
@@ -1977,17 +1963,18 @@ def start_server():
                                 'div.normal-login-item:nth-child(1) > div:nth-child(1) > input:nth-child(1)').fill(
                                 self.phone)
                         try:
-                            self.page.wait_for_selector("#app > section > div.header-placeholder > header > div.header-main > "
-                                                        "div.right-part > div.user-info > div.tooltip-trigger > span",
-                                                        timeout=1000 * 60 * 2)
+                            self.page.wait_for_selector(
+                                "#app > section > div.header-placeholder > header > div.header-main > "
+                                "div.right-part > div.user-info > div.tooltip-trigger > span",
+                                timeout=1000 * 60 * 2)
                             if not os.path.exists(self.path + "\\cookie"):
                                 os.makedirs(self.path + "\\cookie")
                             self.context.storage_state(path=cookie_path)
                             # 检测是否开播
                             selector = "html body div#app div.live-room div.detail div.player " \
-                                    "div.kwai-player.kwai-player-container.kwai-player-rotation-0 " \
-                                    "div.kwai-player-container-video div.kwai-player-plugins div.center-state div.state " \
-                                    "div.no-live-detail div.desc p.tip"  # 检测正在直播时下播的选择器
+                                       "div.kwai-player.kwai-player-container.kwai-player-rotation-0 " \
+                                       "div.kwai-player-container-video div.kwai-player-plugins div.center-state div.state " \
+                                       "div.no-live-detail div.desc p.tip"  # 检测正在直播时下播的选择器
                             try:
                                 msg = self.page.locator(selector).text_content(timeout=3000)
                                 logging.info("当前%s" % thread_name + "，" + msg)
@@ -1996,7 +1983,7 @@ def start_server():
 
                             except Exception as e:
                                 logging.info("当前%s，[%s]正在直播" % (thread_name, lid))
-                                
+
                                 logging.info(f"跳转直播间：{live_url}")
                                 # self.page.goto(live_url)
                                 # time.sleep(1)
@@ -2009,7 +1996,8 @@ def start_server():
                                     self.page.wait_for_selector(captcha_selector, timeout=5000)  # 等待5秒看是否出现验证码
                                     logging.info("检测到验证码，处理验证码...")
                                     # 等待验证码弹窗从DOM中被完全移除
-                                    self.page.wait_for_selector(captcha_selector, state='detached', timeout=10000)  # 假设最长等待10秒验证码验证完成
+                                    self.page.wait_for_selector(captcha_selector, state='detached',
+                                                                timeout=10000)  # 假设最长等待10秒验证码验证完成
                                     logging.info("验证码已验证，弹窗已移除")
                                     # 弹窗处理逻辑之后等待1秒
                                     time.sleep(1)
@@ -2017,7 +2005,7 @@ def start_server():
                                     # self.page.goto(live_url)
                                 except TimeoutError:
                                     logging.error("没有检测到验证码，继续执行...")
-                                    
+
                                 logging.info(f"请在10s内手动打开直播间：{live_url}")
 
                                 time.sleep(10)
@@ -2073,7 +2061,7 @@ def start_server():
                                 "username": username,
                                 "content": content
                             }
-                            
+
                             my_handle.process_data(data, "comment")
                     if obj.get('giftFeeds', ''):
                         idle_time_auto_clear("gift")
@@ -2091,7 +2079,6 @@ def start_server():
                             username = i['user']['userName']
                             pid = i['user']['principalId']
                             logging.info(f"{username}")
-
 
         class run(kslive):
             def __init__(self):
@@ -2148,7 +2135,7 @@ def start_server():
 
                         username = data_json["username"]
                         content = data_json["content"]
-                        
+
                         logging.info(f'[📧直播间弹幕消息] [{username}]：{content}')
 
                         data = {
@@ -2156,7 +2143,7 @@ def start_server():
                             "username": username,
                             "content": content
                         }
-                        
+
                         my_handle.process_data(data, "comment")
 
                         # 添加用户名到最新的用户名列表
@@ -2167,7 +2154,7 @@ def start_server():
                     logging.error("数据解析错误！")
                     my_handle.abnormal_alarm_handle("platform")
                     continue
-            
+
         async def ws_server():
             ws_url = "127.0.0.1"
             ws_port = 5000
@@ -2193,7 +2180,7 @@ def start_server():
         }
 
         proxys = None
-        
+
         # 代理软件开启TUN模式进行代理，由于库的ws不走传入的代理参数，只能靠代理软件全代理了
         client: TikTokLiveClient = TikTokLiveClient(unique_id=f"@{room_id}", web_proxy=proxys, ws_proxy=proxys)
 
@@ -2237,7 +2224,7 @@ def start_server():
 
                 username = event.user.nickname
                 content = event.comment
-                
+
                 logging.info(f'[📧直播间弹幕消息] [{username}]：{content}')
 
                 data = {
@@ -2245,7 +2232,7 @@ def start_server():
                     "username": username,
                     "content": content
                 }
-                
+
                 my_handle.process_data(data, "comment")
 
             @client.on("gift")
@@ -2275,7 +2262,6 @@ def start_server():
                 username = event.user.nickname
                 # 礼物数量
                 num = 1
-                
 
                 try:
                     # 暂时是写死的
@@ -2296,11 +2282,11 @@ def start_server():
                     logging.error(traceback.format_exc())
                     discount_price = 1
 
-
                 # 总金额
                 combo_total_coin = repeat_count * discount_price
 
-                logging.info(f'[🎁直播间礼物消息] 用户：{username} 赠送 {num} 个 {gift_name}，单价 {discount_price}抖币，总计 {combo_total_coin}抖币')
+                logging.info(
+                    f'[🎁直播间礼物消息] 用户：{username} 赠送 {num} 个 {gift_name}，单价 {discount_price}抖币，总计 {combo_total_coin}抖币')
 
                 data = {
                     "platform": platform,
@@ -2316,7 +2302,7 @@ def start_server():
             @client.on("follow")
             async def on_follow(event: FollowEvent):
                 idle_time_auto_clear("follow")
-                
+
                 username = event.user.nickname
 
                 logging.info(f'[➕直播间关注消息] 感谢 {username} 的关注')
@@ -2325,7 +2311,7 @@ def start_server():
                     "platform": platform,
                     "username": username
                 }
-                
+
                 my_handle.process_data(data, "follow")
 
             try:
@@ -2336,13 +2322,12 @@ def start_server():
             except Exception as e:
                 logging.info(f"用户ID: @{client.unique_id} 好像不在线捏, 1分钟后重试...")
                 start_client()
-        
+
         # 运行客户端
         start_client()
     elif platform == "twitch":
         import socks
         from emoji import demojize
-
 
         try:
             server = 'irc.chat.twitch.tv'
@@ -2350,9 +2335,10 @@ def start_server():
             nickname = '主人'
 
             try:
-                channel = '#' + config.get("room_display_id") # 要从中检索消息的频道，注意#必须携带在头部 The channel you want to retrieve messages from
-                token = config.get("twitch", "token") # 访问 https://twitchapps.com/tmi/ 获取
-                user = config.get("twitch", "user") # 你的Twitch用户名 Your Twitch username
+                channel = '#' + config.get(
+                    "room_display_id")  # 要从中检索消息的频道，注意#必须携带在头部 The channel you want to retrieve messages from
+                token = config.get("twitch", "token")  # 访问 https://twitchapps.com/tmi/ 获取
+                user = config.get("twitch", "user")  # 你的Twitch用户名 Your Twitch username
                 # 代理服务器的地址和端口
                 proxy_server = config.get("twitch", "proxy_server")
                 proxy_port = int(config.get("twitch", "proxy_port"))
@@ -2375,7 +2361,6 @@ def start_server():
                 logging.error(f"连接 Twitch IRC server 失败: {e}")
                 my_handle.abnormal_alarm_handle("platform")
 
-
             sock.send(f"PASS {token}\n".encode('utf-8'))
             sock.send(f"NICK {nickname}\n".encode('utf-8'))
             sock.send(f"JOIN {channel}\n".encode('utf-8'))
@@ -2393,7 +2378,7 @@ def start_server():
                     # logging.info(resp)
 
                     if resp.startswith('PING'):
-                            sock.send("PONG\n".encode('utf-8'))
+                        sock.send("PONG\n".encode('utf-8'))
 
                     elif not user in resp:
                         # 闲时计数清零
@@ -2427,7 +2412,7 @@ def start_server():
                     if retry_count >= 3:
                         logging.error(f"多次重连失败，程序结束！")
                         return
-                    
+
                     retry_count += 1
                     logging.error(f"重试次数: {retry_count}")
 
@@ -2455,7 +2440,7 @@ def start_server():
             logging.error(traceback.format_exc())
             my_handle.abnormal_alarm_handle("platform")
     elif platform == "wxlive":
-    
+
         app = Flask(__name__)
         CORS(app)  # 允许跨域请求
 
@@ -2478,7 +2463,7 @@ def start_server():
                 # 如果列表长度达到30，移除最旧的元素
                 if len(seq_list) >= 30:
                     seq_list.pop(0)
-                
+
                 # 添加新元素
                 seq_list.append(data['events'][0]['seq'])
 
@@ -2525,7 +2510,7 @@ def start_server():
                 logging.error(traceback.format_exc())
                 my_handle.abnormal_alarm_handle("platform")
                 return jsonify({"code": -1, "message": f"发送数据失败！{e}"})
-            
+
         @app.route('/send', methods=['POST'])
         def send():
             global my_handle, config
@@ -2549,7 +2534,7 @@ def start_server():
 
             except Exception as e:
                 return jsonify({"code": -1, "message": f"发送数据失败！{e}"})
-            
+
         app.run(host="0.0.0.0", port=config.get("api_port"), debug=False)
         # app.run(host="0.0.0.0", port=8082, debug=True)
     elif platform == "youtube":
@@ -2588,7 +2573,7 @@ def start_server():
                             }
 
                             my_handle.process_data(data, "comment")
-                            
+
                         # time.sleep(1)
                 except Exception as e:
                     logging.error(traceback.format_exc())
@@ -2618,7 +2603,7 @@ def start_server():
                             comment_set.add(comment_id)
                             username = item.get('commentUserNickname', '')
                             content = item.get('content', '')
-                            
+
                             logging.info(f"[{username}]: {content}")
 
                             data = {
@@ -2660,7 +2645,6 @@ if __name__ == '__main__':
         SESSDATA = ''
 
         session: Optional[aiohttp.ClientSession] = None
-    
 
     # 按键监听相关
     do_listen_and_comment_thread = None
